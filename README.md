@@ -11,11 +11,7 @@
 
   ``$ docker run -ti --name node0 -v `pwd`/multichain:/root/.multichain mshuaic/blockchainnode``
 
-<<<<<<< HEAD
 * run other node
-=======
-* run other node0
->>>>>>> ee038883b4526cdca438cce655f43dd7b99b2c6f
 
   `$ docker run -ti --name node1 mshuaic/blockchainnode`
 * exit container
@@ -25,11 +21,7 @@
 
   `$ docker start -i node0`
 
-<<<<<<< HEAD
 After you exit, Docker **DOES NOT** save any change you made in your system.
-=======
-After you exit, Docker **DOES NOT** save your any change you made in your system.
->>>>>>> ee038883b4526cdca438cce655f43dd7b99b2c6f
 If you want to save your change in docker container, check this [docker commit](https://docs.docker.com/engine/reference/commandline/commit/#examples)
 
 #### inside docker container
