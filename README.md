@@ -30,3 +30,15 @@ If you want to save your change in docker container, check this [docker commit](
 * [Multichain Tutorial](https://www.multichain.com/getting-started/)
 
 * [Multichain Explorer](https://github.com/MultiChain/multichain-explorer)
+
+  After you installed MultiChain Explorer in the docker container, you need to
+  forward web port(default: 2750) to the host.
+    * commit your current container
+
+       [docker commit](https://docs.docker.com/engine/reference/commandline/commit/#examples)
+    * re-run
+
+        ``$ docker run -ti --name node0 -v `pwd`/multichain:/root/.multichain -p 2750:2750 mshuaic/blockchainnode``
+
+        more detail: 
+        [docker networking](https://docs.docker.com/config/containers/container-networking/)
