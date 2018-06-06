@@ -21,6 +21,18 @@
 
   `$ docker start -i node0`
 
+* show all running containers
+
+  `$ docker ps -a`
+
+* kill all running containers
+
+  `$ docker kill $(docker ps -aq)`
+
+* remove all containers
+
+  `$ docker rm $(docker ps -aq)`
+
 After you exit, Docker **DOES NOT** save any change you made in your system.
 If you want to save your change in docker container, check this [docker commit](https://docs.docker.com/engine/reference/commandline/commit/#examples)
 
@@ -40,5 +52,5 @@ If you want to save your change in docker container, check this [docker commit](
 
         ``$ docker run -ti --name node0 -v `pwd`/multichain:/root/.multichain -p 2750:2750 mshuaic/blockchainnode``
 
-        more detail: 
+        more detail:
         [docker networking](https://docs.docker.com/config/containers/container-networking/)
