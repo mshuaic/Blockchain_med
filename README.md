@@ -105,7 +105,7 @@ Assuming your host ip is _1.2.3.4_, username is _user_, password is _pswd_, and 
 * run script. Script will automatically create nodes and run multichain and it
 will run multichain-explorer on the first node.
 
-      $ create_node.sh node 4 8570 chain1
+      $ bash create_node.sh node 4 8570 chain1
 
   This example creates 4 nodes and rpcports are 8570, 8571, 8572, 8573. The name
   of blockchain is _chain1_.
