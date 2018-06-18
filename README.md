@@ -2,6 +2,7 @@
 * [install docker](#install-docker)
 * [config node](#inside-docker-container)
 * [remote rpc](#remote-rpc)
+* [automation script](#automation-script)
 
 ## install docker
 * [install docker](https://docs.docker.com/install/)
@@ -94,3 +95,17 @@ Assuming your host ip is _1.2.3.4_, username is _user_, password is _pswd_, and 
 
     api = Savoir(rpcuser, rpcpasswd, rpchost, rpcport, chainname)
     print(api.getinfo())
+
+## automation script
+* [install docker](#install-docker)
+* pull blockchainnode
+
+      $ docker pull mshuaic/blockchainnode
+
+* run script. Script will automatically create nodes and run multichain and it
+will run multichain-explorer on the first node.
+
+      $ create_node.sh node 4 8570 chain1
+
+  Now, you should be able to view multichain on http://127.0.0.1:2750
+* clean.sh cleans up all nodes and container
