@@ -107,5 +107,8 @@ will run multichain-explorer on the first node.
 
       $ create_node.sh node 4 8570 chain1
 
+  This example creates 4 nodes and rpcports are 8570, 8571, 8572, 8573. The name
+  of blockchain is _chain1_.
+
   Now, you should be able to view multichain on http://127.0.0.1:2750
 * clean.sh cleans up all nodes and container
