@@ -24,6 +24,7 @@ else
     chain=chain1
 fi
 
+TIMEOUT=10
 
 echo rpcuser=multichainrpc >> multichain.conf
 echo rpcpassword=emory >> multichain.conf
@@ -41,11 +42,12 @@ done
 rm multichain.conf
 
 # run master node
+echo "building master node"
 dir=$(pwd)/${dir_prefix}0
-docker run -it -d --name ${dir_prefix}0 -v $dir/multichain:/root/.multichain -p 2750:2750 -p $rpcport:$rpcport mshuaic/blockchainnode 
+docker run -it -d --name ${dir_prefix}0 -v $dir/multichain:/root/.multichain -p 2750:2750 -p $rpcport:$rpcport mshuaic/blockchainnode 1>/dev/null
 
 # create blockchain
-docker exec -d ${dir_prefix}0 multichain-util create chain1 -default-rpc-port=$3 -default-network-port=$[$3+1] -mine-empty-rounds=1 -anyone-can-connect=true -anyone-can-create=true -anyone-can-send=true -anyone-can-receive=true -setup-first-blocks=1 -anyone-can-mine=true -mining-turnover=0 -target-block-time=2
+docker exec -d ${dir_prefix}0 multichain-util create $chain -default-rpc-port=$rpcport -default-network-port=$[$rpcport+1] -mine-empty-rounds=1 -anyone-can-connect=true -anyone-can-create=true -anyone-can-send=true -anyone-can-receive=true -setup-first-blocks=1 -anyone-can-mine=true -mining-turnover=0 -target-block-time=2
 
 # copy config file
 docker exec -d ${dir_prefix}0 cp -f /root/.multichain/multichain.conf /root/.multichain/$chain/multichain.conf
@@ -64,10 +66,11 @@ ip=$(docker exec ${dir_prefix}0 hostname -I)
 conport=$[$rpcport + 1]
 
 # run other nodes
+echo "building slave nodes"
 for ((i=1; i < $num_of_node; i++))
 do
     nodename=$dir_prefix$i
-    docker run -it -d --name $nodename -v $(pwd)/$nodename/multichain:/root/.multichain -p $[$rpcport + $i]:$rpcport mshuaic/blockchainnode
+    docker run -it -d --name $nodename -v $(pwd)/$nodename/multichain:/root/.multichain -p $[$rpcport + $i]:$rpcport mshuaic/blockchainnode 1>/dev/null
     docker exec -d $nodename multichaind $chain@$ip:$conport -rpcpassword=emory -autosubscribe=streams -daemon
 
     # this setup is not good for multichain-explorer on slave nodes
@@ -75,7 +78,8 @@ do
 done
 
 # pause for 1 s, let node start to run blockchain
-sleep 1
+echo "setting up nodes"
+sleep 2
 
 # a workaround of this issue
 # https://www.multichain.com/qa/3601/anyone-can-issue-dont-seem-to-work?show=3604#a3604
@@ -87,14 +91,24 @@ done
 
 for ((i=1; i< $num_of_node; i++))
 do
-    curl -d '{"method":"send","params":['"${address[$i]}"',0]}' http://multichainrpc:emory@127.0.0.1:$rpcport/ 
+    txid[$i]=$(curl -d '{"method":"send","params":['"${address[$i]}"',0]}' http://multichainrpc:emory@127.0.0.1:$rpcport/ 2>/dev/null | jq '.["result"]') 
+    # echo ${txid[$i]}
 done
 
-# sleep 5
+for ((i=1; i< $num_of_node; i++))
+do
+    timer=0
+    confirmation=0
+    until (( $confirmation >= 1 ))
+    do
+	confirmation=$(curl -d '{"method":"gettxout","params":['"${txid[$i]}"',0]}' http://multichainrpc:emory@127.0.0.1:$rpcport/ 2>/dev/null | jq '.["result"]["confirmations"]')
+	sleep 1
+	((timer++))
+	if ((timer == TIMEOUT)); then
+	   echo "TIME OUT"
+	   exit
+	fi
+    done
+done
 
-# for ((i=1; i< $num_of_node; i++))
-# do
-#     curl -d '{"method":"send","params":['"${address[0]}"',0]}' http://multichainrpc:emory@127.0.0.1:$[$rpcport+$i]/ 
-# done
-
-
+echo "nodes and blockchain are successfully created"
