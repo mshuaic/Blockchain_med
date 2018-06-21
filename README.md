@@ -1,10 +1,33 @@
-## Menu
+## Benchmark Instruction
+#### Step 1
+Download git repo
+
+    git clone https://github.com/mshuaic/Blockchain_med
+
+#### Step 2
+Run script. [detail](#automation-script)  
+You need to install [fq](https://stedolan.github.io/jq/).  
+
+    bash create_node.sh
+
+#### Step 3
+Run benchmark.
+
+    python benchmark.py
+
+#### Addition file
+* **config.py**: rpc credentials, data directory
+* **util.py**: provides utility function
+* **Savoir.py**: python Json-RPC wrapper
+* **baseline.py**: baseline implementation  
+
+## Manual Installation
 * [install docker](#install-docker)
 * [config node](#inside-docker-container)
 * [remote rpc](#remote-rpc)
 * [automation script](#automation-script)
 
-## install docker
+### install docker
 * [install docker](https://docs.docker.com/install/)
 
 * pull containter
@@ -42,7 +65,7 @@
 After you exit, Docker **DOES NOT** save any change you made in your system.
 If you want to save your change in docker container, check this [docker commit](https://docs.docker.com/engine/reference/commandline/commit/#examples)
 
-## inside docker container
+### inside docker container
 * [Download and Install Multichain](https://www.multichain.com/download-install/)
 
 * [Multichain Tutorial](https://www.multichain.com/getting-started/)
@@ -61,7 +84,7 @@ If you want to save your change in docker container, check this [docker commit](
         more detail:
         [docker networking](https://docs.docker.com/config/containers/container-networking/)
 
-## Remote rpc
+### Remote rpc
 
 All you need to do is add the RPC port number. Copy the default-rpc-port value from params.dat and add an entry to multichain.conf as follows:
 
@@ -96,7 +119,7 @@ Assuming your host ip is _1.2.3.4_, username is _user_, password is _pswd_, and 
     api = Savoir(rpcuser, rpcpasswd, rpchost, rpcport, chainname)
     print(api.getinfo())
 
-## automation script
+### automation script
 * [install docker](#install-docker)
 * pull blockchainnode
 
