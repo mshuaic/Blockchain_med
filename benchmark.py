@@ -1,4 +1,7 @@
-# version 0.1
+# version 0.11
+# 06/21/2018
+# clean up the code
+
 # 06/20/2018
 # baseline implematation
 # Insertion: insert n (n = number of attribute) times copy to blockchain, using attribute as key and entire line as value
@@ -6,123 +9,30 @@
 # And operation: query using single attribute and do AND operation locally
 
 
-############################################################################
-############################################################################
+###########################################################################
+###########################################################################
 
-
-# Put data in the same directory
-
-
-from Savoir import Savoir
 import re
 from time import sleep
-from timeit import default_timer as timer
+
 from random import randint
 from random import gauss
 from random import sample
 import subprocess
-
-NUM_NODE = 4
-
-
-config = {
-    "rpcuser": 'multichainrpc',
-    "rpcpasswd": 'emory',
-    "rpchost": '127.0.0.1',
-    "rpcport": 8570,
-    "chainname": 'chain1'
-}
-
-# time, node, ID, ref-ID, user, activity, resource
-ATTRIBUTE = ['T', 'N', 'I', 'r', 'U', 'A', 'R']
-
-
-def getAPI(config, num_node):
-    api = [None] * num_node
-    for i in range(NUM_NODE):
-        api[i] = Savoir(config["rpcuser"], config["rpcpasswd"],
-                        config["rpchost"], str(config["rpcport"]+i), config["chainname"])
-    # print(api[i].getinfo())
-    return api
-
-
-def createStream(masternode, streamPrefix):
-    streams = masternode.liststreams()['result']
-    if streamPrefix not in [item["name"] for item in streams]:
-        masternode.create('stream', streamPrefix, True)
-    # for i in range(NUM_NODE):
-    # api[i].create('stream', 'node'+str(i), True)
-
-
-def measure(func, args, time=1):
-    elapsed = timer()
-    for i in range(time):
-        func(*args)
-    elapsed = timer() - elapsed
-    # print("average insertion time: %f" % (elapsed / time))
-    return elapsed / time
-
-
-def display(result):
-    for item in result:
-        print(bytes.fromhex(item['data']).decode('utf-8'))
-
-
-def getData(result):
-    data = []
-    for item in result:
-        data.append(bytes.fromhex(item['data']).decode('utf-8'))
-    return data
-
+from util import *
+from baseline import *
+from config import *
 
 #########################################################################
-######################       TEST        ################################
+######################       benchmark        ###########################
 #########################################################################
 
 
-STREAM = 'data'
-
-
-def insert(api, data):
-    for line in data:
-        hexstr = line.encode('utf-8').hex()
-        attributes = line.split(" ")
-        for i in range(len(ATTRIBUTE)):
-            api.publish(STREAM, ATTRIBUTE[i] + attributes[i], hexstr)
-
-
-def singleQuery(api, attribute, display=False):
-    result = api.liststreamkeyitems(STREAM, attribute)
-    if display:
-        display(result["result"])
-    return result["result"]
-
-
-def rangeQuery(api, start, end, display=False):
-    result = []
-    for timestamp in range(start, end+1):
-        result += api.liststreamkeyitems(STREAM, 'T'+str(timestamp))
-    if display:
-        display(result["result"])
-
-
-def andQuery(api, attributes, display=False):
-    resultSet = []
-    for attr in attributes:
-        # print(getData(singleQuery(api, attr)))
-        resultSet.append(set(getData(singleQuery(api, attr))))
-    result = resultSet[0]
-    for i in range(1, len(resultSet)):
-        result &= resultSet[i]
-    if display:
-        display(result)
-
-
-size = sum(1 for line in open('test0.txt'))
+size = sum(1 for line in open(datadir+'test0.txt'))
 database = []
 for i in range(NUM_NODE):
     database += [re.sub('\s+', ' ', line)
-                 for line in open('test'+str(i)+'.txt')]
+                 for line in open(datadir+'test'+str(i)+'.txt')]
 print("database size: %d" % len(database))
 
 nodes = getAPI(config, NUM_NODE)
@@ -137,7 +47,7 @@ def insertionTest():
     total = 0
     for i in range(NUM_NODE):
         data = [re.sub('\s+', ' ', line)
-                for line in open('test'+str(i)+'.txt')]
+                for line in open(datadir+'test'+str(i)+'.txt')]
         elapsed = measure(insert, (nodes[i], data))
         total += elapsed
         print('Node %d Insertion time: %f' % (i, elapsed))
