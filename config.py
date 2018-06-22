@@ -13,3 +13,6 @@ ATTRIBUTE = ['T', 'N', 'I', 'r', 'U', 'A', 'R']
 
 
 datadir = './testData/'
+
+
+FILE_SIZE = 100

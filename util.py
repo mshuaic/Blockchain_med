@@ -2,6 +2,8 @@ from Savoir import Savoir
 from timeit import default_timer as timer
 from config import *
 
+ENCODE_FORMAT = 'utf-8'
+
 
 def getAPI(config, num_node):
     api = [None] * num_node
@@ -31,11 +33,14 @@ def measure(func, args, time=1):
 
 def display(result):
     for item in result:
-        print(bytes.fromhex(item['data']).decode('utf-8'))
+        print(bytes.fromhex(item['data']).decode(ENCODE_FORMAT))
 
 
-def getData(result):
+def getData(result, isHex=False):
     data = []
     for item in result:
-        data.append(bytes.fromhex(item['data']).decode('utf-8'))
+        if isHex:
+            data.append(item['data'])
+        else:
+            data.append(bytes.fromhex(item['data']).decode(ENCODE_FORMAT))
     return data

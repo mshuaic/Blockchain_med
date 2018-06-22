@@ -1,3 +1,7 @@
+# version 0.2
+# 06/21/2018
+# implematation hash pointer
+
 # version 0.11
 # 06/21/2018
 # clean up the code
@@ -13,33 +17,55 @@
 ###########################################################################
 
 import re
-from time import sleep
-
+# from time import sleep
 from random import randint
 from random import gauss
 from random import sample
 import subprocess
-from util import *
-from baseline import *
-from config import *
+from util import measure, getAPI
+from config import NUM_NODE, FILE_SIZE, datadir, config, ATTRIBUTE
+
+#########################################################################
+######################   implematation file   ###########################
+#########################################################################
+
+# from baseline0_2 import *
+# import baseline0_2 as baseline
+import importlib
+baseline = None
+
+
+def loadBaseline(file):
+    global baseline
+    baseline = importlib.import_module(file)
+
 
 #########################################################################
 ######################       benchmark        ###########################
 #########################################################################
 
+nodes = None
+database = None
 
-size = sum(1 for line in open(datadir+'test0.txt'))
-database = []
-for i in range(NUM_NODE):
-    database += [re.sub('\s+', ' ', line)
-                 for line in open(datadir+'test'+str(i)+'.txt')]
-print("database size: %d" % len(database))
 
-nodes = getAPI(config, NUM_NODE)
-createStream(nodes[0], STREAM)
-sleep(1)
+def init():
+    if baseline is None:
+        print("Please call loadBaseline() to load baseline first")
+        exit
 
-print("File Size: %d\n" % size)
+    # size = sum(1 for line in open(datadir+'test0.txt'))
+    global database
+    database = []
+    for i in range(NUM_NODE):
+        database += [re.sub('\s+', ' ', line)
+                     for line in open(datadir+'test'+str(i)+'.txt')]
+    print("database size: %d" % len(database))
+
+    global nodes
+    nodes = getAPI(config, NUM_NODE)
+    baseline.createStreams(nodes[0])
+
+    print("File Size: %d\n" % FILE_SIZE)
 
 
 def insertionTest():
@@ -48,7 +74,7 @@ def insertionTest():
     for i in range(NUM_NODE):
         data = [re.sub('\s+', ' ', line)
                 for line in open(datadir+'test'+str(i)+'.txt')]
-        elapsed = measure(insert, (nodes[i], data))
+        elapsed = measure(baseline.insert, (nodes[i], data))
         total += elapsed
         print('Node %d Insertion time: %f' % (i, elapsed))
     print("total insertion time: %f " % total)
@@ -57,8 +83,8 @@ def insertionTest():
 
 def singleQueryTest():
     print("Single Field Query Test:")
-    samplePer = 1
-    sampleNum = len(database) * samplePer
+    samplePer = 0.1
+    sampleNum = int(len(database) * samplePer)
     total = 0
     for i in range(NUM_NODE):
         elapsed = 0
@@ -66,7 +92,7 @@ def singleQueryTest():
             index = randint(0, len(database)-1)
             line = database[index]
             field = randint(0, len(ATTRIBUTE)-1)
-            elapsed += measure(singleQuery,
+            elapsed += measure(baseline.singleQuery,
                                (nodes[i], ATTRIBUTE[field] + line.split(" ")[field]))
         total += elapsed
         print("Node %d query time: %f" % (i, elapsed / sampleNum))
@@ -87,7 +113,8 @@ def rangeQueryTest():
         print("timeRange: %ds(min: %.2f)" % (timeRange, timeRange/60))
         elapsed = 0
         for j in range(NUM_TEST):
-            elapsed += measure(rangeQuery, (nodes[i], start, start+timeRange))
+            elapsed += measure(baseline.rangeQuery,
+                               (nodes[i], start, start+timeRange))
         print("node %d range query time: %f" % (i, elapsed/NUM_TEST))
         total += elapsed/NUM_TEST
     print("average range query time: %f" % (total / NUM_NODE))
@@ -107,7 +134,8 @@ def andQueryTest():
                 for q in range(len(fields)):
                     attributes.append(
                         ATTRIBUTE[fields[q]] + line.split(" ")[fields[q]])
-                andQueryTime = measure(andQuery, (nodes[i], attributes))
+                andQueryTime = measure(
+                    baseline.andQuery, (nodes[i], attributes))
                 elapsed += andQueryTime
                 print("%d and query: %f" % (j, andQueryTime))
         print("node %d and query time: %f" % (i, elapsed/NUM_TEST))
@@ -124,12 +152,12 @@ def storageTest():
 ##########################################################################
 
 
-insertionTest()
-print("\n")
-singleQueryTest()
-print("\n")
-rangeQueryTest()
-print("\n")
-andQueryTest()
-print("\n")
-storageTest()
+# insertionTest()
+# print("\n")
+# singleQueryTest()
+# print("\n")
+# rangeQueryTest()
+# print("\n")
+# andQueryTest()
+# print("\n")
+# storageTest()

@@ -1,7 +1,11 @@
-from config import *
-from util import *
+from config import ATTRIBUTE, FILE_SIZE
+from util import getData, createStream
 
 STREAM = 'data'
+
+
+def createStreams(api):
+    createStream(api, STREAM)
 
 
 def insert(api, data):
@@ -13,7 +17,7 @@ def insert(api, data):
 
 
 def singleQuery(api, attribute, display=False):
-    result = api.liststreamkeyitems(STREAM, attribute)
+    result = api.liststreamkeyitems(STREAM, attribute, False, FILE_SIZE)
     if display:
         display(result["result"])
     return result["result"]
