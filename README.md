@@ -10,16 +10,22 @@ You need to install [fq](https://stedolan.github.io/jq/).
 
     bash create_node.sh
 
-#### Step 3
-Run benchmark.
+If you are already running nodes, you can clean up using *clean.sh*
 
-    python benchmark.py
+    bash clean.sh
+
+#### Step 3
+Run benchmark. You can specify which baseline program you want to test.
+
+    python main.py baseline1.py
+    python main.py baseline2.py
 
 #### Addition file
 * **config.py**: rpc credentials, data directory
 * **util.py**: provides utility function
 * **Savoir.py**: python Json-RPC wrapper
 * **baseline.py**: baseline implementation  
+* **benchmark.py**: benchmark test suite
 
 ## Manual Installation
 * [install docker](#install-docker)
