@@ -1,9 +1,7 @@
 # Overview
 
-This project is for iDash Blockchain Competition.
-http://www.humangenomeprivacy.org/2018/competition-tasks.html
-
-Blockchain-based immutable logging and querying for cross-site genomic dataset access audit trial
+This project is for [iDash Blockchain Competition](http://www.humangenomeprivacy.org/2018/competition-tasks.html):
+Blockchain-based immutable logging and querying for cross-site genomic dataset access audit trial.
 
 # Environment
 - tested in MacOS 10.13 and Ubuntu 16.0.4
