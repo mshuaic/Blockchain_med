@@ -8,7 +8,6 @@ Blockchain-based immutable logging and querying for cross-site genomic dataset a
 - Python 3
 - [install fq](https://stedolan.github.io/jq/). 
 - [install docker](https://docs.docker.com/install/)
-- [install Savoir](https://github.com/DXMarkets/Savoir)
 
 # Scripts
 
