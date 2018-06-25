@@ -28,29 +28,6 @@ see [our solution](#our-solution)
 * `Savoir.py`: python Json-RPC wrapper
 * `benchmark.py`: benchmark test suite
 
-# our solution
-Data Storage (Insertion) and Query Implementation.
-
-- `baseline1.py`
-
-Insert a record:  
-For the i-th attribute in the record, we store key = i-th attribute and value = plaintext of record.
-Hence, the plaintext of the record is duplicated k times where k is the amount of attributes.
-
-Query:  
-For a query with timestamp-range, we transform it into the _union_ of multiple single-time-point query.  
-For a query with multiple attributes combined by AND, we transform it into the _intersection_ of multiple single-attribute queries.  
-For a single-attribute (or single-time-point) query, we return the value(s) w.r.t. the key (i.e, the given attribute).  
-
-- `baseline2.py`
-
-Insert a record:  
-First, we store the record as key = `SHA1` hash of record, value = plaintext of record.  
-Then, we store its k attributes info as key =  hash of i-th attributes, value = `SHA1` hash of the record; hence, the hash of this record (instead of the plaintext) is duplicated k times. 
-
-Query:  
-similar to `baseline1`.
-
 
 # Run Benchmark
 #### Step 1
@@ -83,6 +60,30 @@ Run benchmark. You can specify which baseline program you want to test.
 
     python main.py baseline1
     python main.py baseline2
+
+
+# our solution
+Data Storage (Insertion) and Query Implementation.
+
+- `baseline1.py`
+
+Insert a record:  
+For the i-th attribute in the record, we store key = i-th attribute and value = plaintext of record.
+Hence, the plaintext of the record is duplicated k times where k is the amount of attributes.
+
+Query:  
+For a query with timestamp-range, we transform it into the _union_ of multiple single-time-point query.  
+For a query with multiple attributes combined by AND, we transform it into the _intersection_ of multiple single-attribute queries.  
+For a single-attribute (or single-time-point) query, we return the value(s) w.r.t. the key (i.e, the given attribute).  
+
+- `baseline2.py`
+
+Insert a record:  
+First, we store the record as key = `SHA1` hash of record, value = plaintext of record.  
+Then, we store its k attributes info as key =  hash of i-th attributes, value = `SHA1` hash of the record; hence, the hash of this record (instead of the plaintext) is duplicated k times. 
+
+Query:  
+similar to `baseline1`.
 
 
 
