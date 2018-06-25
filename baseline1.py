@@ -1,7 +1,8 @@
 from config import ATTRIBUTE, FILE_SIZE
-from util import getData, createStream
+from util import getData, createStream, validate
 
 STREAM = 'data'
+DO_VALIDATION = True
 
 
 def createStreams(api):
@@ -16,8 +17,10 @@ def insert(api, data):
             api.publish(STREAM, ATTRIBUTE[i] + attributes[i], hexstr)
 
 
-def singleQuery(api, attribute, display=False):
+def singleQuery(api, attribute, display=False, validation=DO_VALIDATION):
     result = api.liststreamkeyitems(STREAM, attribute, False, FILE_SIZE)
+    if validation:
+        validate(getData(result["result"]), attribute[1:])
     if display:
         display(result["result"])
     return result["result"]

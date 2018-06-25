@@ -1,6 +1,6 @@
 from Savoir import Savoir
 from timeit import default_timer as timer
-from config import *
+from config import NUM_NODE
 
 ENCODE_FORMAT = 'utf-8'
 
@@ -44,3 +44,19 @@ def getData(result, isHex=False):
         else:
             data.append(bytes.fromhex(item['data']).decode(ENCODE_FORMAT))
     return data
+
+
+def validate(lines: str, *attributes, verbose=False):
+    result = []
+    for line in lines:
+        flag = True
+        for att in attributes:
+            if att not in line.split(" "):
+                if verbose:
+                    print("attribute: %s, %s" % (att, line))
+                    # input()
+                flag = False
+                break
+        if flag:
+            result += line
+    return result

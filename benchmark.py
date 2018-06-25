@@ -1,3 +1,7 @@
+# version 0.2.1
+# 06/25/2018
+# added validation function
+
 # version 0.2
 # 06/21/2018
 # implematation hash pointer
@@ -143,7 +147,7 @@ def andQueryTest():
 
 def storageTest():
     print("Storage Usage:")
-    print(subprocess.call(['sudo', 'du', '-sh', '-Bk',
+    print(subprocess.call(['sudo', 'du', '-sh', '-k',
                            'node0', 'node1', 'node2', 'node3']))
 
 

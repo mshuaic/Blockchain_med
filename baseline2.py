@@ -1,11 +1,15 @@
 # hash pointer implematation
 
 from config import ATTRIBUTE, FILE_SIZE
-from util import getData, createStream
+from util import getData, createStream, validate, ENCODE_FORMAT
 from hashlib import sha1 as hash
+# from zlib import crc32 as hash
+
 
 DATA = 'data'
 INDEX = 'index'
+
+DO_VALIDATION = True
 
 STREAMS = [DATA, INDEX]
 
@@ -15,10 +19,16 @@ def createStreams(api):
         createStream(api, s)
 
 
+# def hash(data):
+#     return 11
+
+
 def insert(api, data):
     for line in data:
-        hexstr = line.encode('utf-8').hex()
-        pointer = hash(bytearray(line, encoding='utf-8')).hexdigest()
+        hexstr = line.encode(ENCODE_FORMAT).hex()
+        pointer = hash(bytearray(line, encoding=ENCODE_FORMAT)).hexdigest()
+        # pointer = str(hash(bytearray(line, encoding=ENCODE_FORMAT))
+        # ).encode(ENCODE_FORMAT).hex()
         # pointer = pointer.encode('utf-8').hex()
         api.publish(DATA, pointer, hexstr)
     # for line in data:
@@ -36,8 +46,9 @@ def singleQuery(api, attribute, display=False):
     for p in pointers:
         result += getData(api.liststreamkeyitems(DATA,
                                                  p, False, FILE_SIZE)["result"])
-    # validate(result, truth[attribute])
-    # result = api.liststreamkeyitems(DATA, attribute)
+    if DO_VALIDATION:
+        result = validate(result, attribute[1:])
+
     if display:
         display(result)
     return result
