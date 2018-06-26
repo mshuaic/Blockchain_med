@@ -12,8 +12,8 @@ Blockchain-based immutable logging and querying for cross-site genomic dataset a
 # Scripts
 
 #### configuration
-- `create_node.sh` genrating nodes... ??
-- `clean.sh` cleaning the temporary nodes ... ??
+- `create_node.sh` genrating Multichain nodes.
+- `clean.sh` cleaning the temporary files.
 
 #### data storage and query implementation 
 - `baseline.py`
@@ -39,6 +39,7 @@ Download git repo and docker file
 The docker file has already been configured with Multichain 1.0.4. 
 
 #### Step 2
+Go to the downloaded Git repo folder, run scripts:
 
 Automatically create nodes and run multichain and it will run multichain-explorer on the first node.
 
