@@ -10,7 +10,8 @@ config = {
 
 # time, node, ID, ref-ID, user, activity, resource
 ATTRIBUTE = ['T', 'N', 'I', 'r', 'U', 'A', 'R']
-
+ATTRIBUTE_NAME = ['Timestamp', 'Node', 'ID',
+                  'Ref-ID', 'User', 'Activity', 'Resource']
 
 datadir = './testData/'
 

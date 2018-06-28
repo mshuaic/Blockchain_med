@@ -9,7 +9,7 @@ from hashlib import sha1 as hash
 DATA = 'data'
 INDEX = 'index'
 
-DO_VALIDATION = True
+DO_VALIDATION = False
 
 STREAMS = [DATA, INDEX]
 
@@ -38,17 +38,23 @@ def insert(api, data):
             api.publish(INDEX, ATTRIBUTE[i] + attributes[i], pointer)
 
 
-def singleQuery(api, attribute, display=False):
-    pointers = api.liststreamkeyitems(
-        INDEX, attribute, False, FILE_SIZE)
+def getPointers(api, attribute):
+    pointers = api.liststreamkeyitems(INDEX, attribute, False, FILE_SIZE)
     pointers = getData(pointers["result"], True)
+    return pointers
+
+
+def getValue(api, pointer):
+    return api.liststreamkeyitems(DATA, pointer, False, FILE_SIZE)["result"]
+
+
+def pointQuery(api, attribute, display=False):
+    pointers = getPointers(api, attribute)
     result = []
     for p in pointers:
-        result += getData(api.liststreamkeyitems(DATA,
-                                                 p, False, FILE_SIZE)["result"])
+        result += getValue(api, p)
     if DO_VALIDATION:
         result = validate(result, attribute[1:])
-
     if display:
         display(result)
     return result
@@ -56,18 +62,31 @@ def singleQuery(api, attribute, display=False):
 
 def rangeQuery(api, start, end, display=False):
     result = []
+    pointers = []
     for timestamp in range(start, end+1):
-        result += singleQuery(api, ATTRIBUTE[0]+str(timestamp), display)
+        pointers += getPointers(api, str(timestamp))
+    for p in pointers:
+        result += getValue(api, p)
+    if display:
+        display(result["result"])
     return result
 
 
+# 1. get the hash pointers of an attribute A
+# 2. get the hash pointers of an attribute B
+# 3. intersect result 1 and 2
+# 4. use the result of 3 to query data
 def andQuery(api, attributes, display=False):
-    resultSet = []
+    keySet = []
     for attr in attributes:
-        # print(getData(singleQuery(api, attr)))
-        resultSet.append(set(singleQuery(api, attr)))
-    result = resultSet[0]
-    for i in range(1, len(resultSet)):
-        result &= resultSet[i]
+        keySet.append(set(getPointers(api, attr)))
+        # print(getData(pointQuery(api, attr)))
+        # resultSet.append(set(getData(pointQuery(api, attr))))
+    key = keySet[0]
+    for i in range(1, len(keySet)):
+        key &= keySet[i]
+    result = []
+    for k in key:
+        result.append(getValue(api, k))
     if display:
         display(result)

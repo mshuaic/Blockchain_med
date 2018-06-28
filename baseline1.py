@@ -2,7 +2,7 @@ from config import ATTRIBUTE, FILE_SIZE
 from util import getData, createStream, validate
 
 STREAM = 'data'
-DO_VALIDATION = True
+DO_VALIDATION = False
 
 
 def createStreams(api):
@@ -17,7 +17,7 @@ def insert(api, data):
             api.publish(STREAM, ATTRIBUTE[i] + attributes[i], hexstr)
 
 
-def singleQuery(api, attribute, display=False, validation=DO_VALIDATION):
+def pointQuery(api, attribute, display=False, validation=DO_VALIDATION):
     result = api.liststreamkeyitems(STREAM, attribute, False, FILE_SIZE)
     if validation:
         validate(getData(result["result"]), attribute[1:])
@@ -37,8 +37,8 @@ def rangeQuery(api, start, end, display=False):
 def andQuery(api, attributes, display=False):
     resultSet = []
     for attr in attributes:
-        # print(getData(singleQuery(api, attr)))
-        resultSet.append(set(getData(singleQuery(api, attr))))
+        # print(getData(pointQuery(api, attr)))
+        resultSet.append(set(getData(pointQuery(api, attr))))
     result = resultSet[0]
     for i in range(1, len(resultSet)):
         result &= resultSet[i]

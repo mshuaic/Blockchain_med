@@ -1,6 +1,7 @@
 from Savoir import Savoir
 from timeit import default_timer as timer
 from config import NUM_NODE
+import matplotlib.pyplot as plt
 
 ENCODE_FORMAT = 'utf-8'
 
@@ -22,7 +23,7 @@ def createStream(masternode, streamPrefix):
     # api[i].create('stream', 'node'+str(i), True)
 
 
-def measure(func, args, time=1):
+def measure(func, *args, time=1):
     elapsed = timer()
     for i in range(time):
         func(*args)
@@ -38,7 +39,11 @@ def display(result):
 
 def getData(result, isHex=False):
     data = []
+    if result is None:
+        return []
     for item in result:
+        # print("AAAAA", item)
+        # if item is not None:
         if isHex:
             data.append(item['data'])
         else:
@@ -60,3 +65,7 @@ def validate(lines: str, *attributes, verbose=False):
         if flag:
             result += line
     return result
+
+
+def draw(files=None):
+    pass

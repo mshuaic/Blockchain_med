@@ -1,3 +1,8 @@
+# version 0.3
+# 06/26/2018
+# use fixed query to benchmark
+# added graphic chart
+
 # version 0.2.1
 # 06/25/2018
 # added validation function
@@ -21,13 +26,17 @@
 ###########################################################################
 
 import re
+import json
 # from time import sleep
 from random import randint
 from random import gauss
 from random import sample
 import subprocess
 from util import measure, getAPI
-from config import NUM_NODE, FILE_SIZE, datadir, config, ATTRIBUTE
+from config import NUM_NODE, FILE_SIZE, datadir, config, ATTRIBUTE, ATTRIBUTE_NAME
+from pathlib import Path
+import logging
+from itertools import combinations
 
 #########################################################################
 ######################   implematation file   ###########################
@@ -48,13 +57,33 @@ def loadBaseline(file):
 ######################       benchmark        ###########################
 #########################################################################
 
+TESTCASE_CONFIG = {
+    "pointQuery": 8,
+    "rangeQuery": 1,
+    "andQuery": 1
+}
+RANGE_SCALE = [100, 500, 1000]
+AND_FIELDS = ATTRIBUTE_NAME
+
+MAX_ROUND = 1
+
+output_json = {'num_nodes': NUM_NODE, 'file_size': FILE_SIZE, 'insertion': 0,
+               'point_query': {}, 'range_query': {}, 'and_query': {}, 'storage': 0}
+
+dir_path = Path.cwd()
+log = logging.getLogger("benchmark")
+log.setLevel('INFO')
+# log.setLevel('DEBUG')
+
 nodes = None
-database = None
+database = []
+testcases = {key: [] for key in TESTCASE_CONFIG}
+index = 0
 
 
 def init():
     if baseline is None:
-        print("Please call loadBaseline() to load baseline first")
+        log.error("Please call loadBaseline() to load baseline first")
         exit
 
     # size = sum(1 for line in open(datadir+'test0.txt'))
@@ -63,105 +92,132 @@ def init():
     for i in range(NUM_NODE):
         database += [re.sub('\s+', ' ', line)
                      for line in open(datadir+'test'+str(i)+'.txt')]
-    print("database size: %d" % len(database))
+    log.info("database size: %d", len(database))
 
     global nodes
     nodes = getAPI(config, NUM_NODE)
     baseline.createStreams(nodes[0])
 
-    print("File Size: %d\n" % FILE_SIZE)
+    log.info("File Size: %d" % FILE_SIZE)
+
+
+def loadTestCases(testfile='testcases.json'):
+    global testcases
+    temp = [database[i]
+            for i in sample(range(len(database)), sum(TESTCASE_CONFIG.values()))]
+    count = 0
+    if Path(Path(dir_path).joinpath(testfile)).is_file() is False:
+        for key in TESTCASE_CONFIG.keys():
+            for i in range(TESTCASE_CONFIG[key]):
+                testcases[key].append(temp[count])
+                count += 1
+        with open(testfile, 'w') as write_file:
+            json.dump(testcases, write_file)
+    else:
+        with open(testfile, 'r') as read_file:
+            testcases = json.load(read_file)
 
 
 def insertionTest():
-    print("Insertion Test:")
+    log.info("Insertion Test:")
     total = 0
     for i in range(NUM_NODE):
         data = [re.sub('\s+', ' ', line)
                 for line in open(datadir+'test'+str(i)+'.txt')]
-        elapsed = measure(baseline.insert, (nodes[i], data))
+        elapsed = measure(baseline.insert, nodes[i], data)
         total += elapsed
-        print('Node %d Insertion time: %f' % (i, elapsed))
-    print("total insertion time: %f " % total)
-    print("average insertion time: %f" % (total/NUM_NODE))
+        log.info('Node %d Insertion time: %f' % (i, elapsed))
+    log.info("total insertion time: %f " % total)
+    log.info("average insertion time: %f" % (total/NUM_NODE))
+    output_json['insertion'] = total/NUM_NODE
 
 
-def singleQueryTest():
-    print("Single Field Query Test:")
-    samplePer = 0.1
-    sampleNum = int(len(database) * samplePer)
+def getAverageNodeRound(func, *args):
+    elapsed = 0
+    # log.debug(args)
+    for i in range(MAX_ROUND):
+        for j in range(NUM_NODE):
+            elapsed += measure(func, nodes[j], *args)
+    return elapsed / (MAX_ROUND * NUM_NODE)
+
+
+def pointQueryTest():
+    log.info("Point Field Query Test:")
+    i = 0
     total = 0
-    for i in range(NUM_NODE):
+    for i in range(len(ATTRIBUTE)):
         elapsed = 0
-        for j in range(sampleNum):
-            index = randint(0, len(database)-1)
-            line = database[index]
-            field = randint(0, len(ATTRIBUTE)-1)
-            elapsed += measure(baseline.singleQuery,
-                               (nodes[i], ATTRIBUTE[field] + line.split(" ")[field]))
-        total += elapsed
-        print("Node %d query time: %f" % (i, elapsed / sampleNum))
-    print("average query time: %f" % (total/(sampleNum * NUM_NODE)))
+        fields = testcases['pointQuery'][i].split(" ")
+        qtime = getAverageNodeRound(baseline.pointQuery,
+                                    ATTRIBUTE[i] + fields[i])
+        # for j in range(MAX_ROUND):
+        #     for k in range(NUM_NODE):
+        #         elapsed += measure(baseline.pointQuery,
+        #                            (nodes[k], ATTRIBUTE[i] + fields[i]))
+        # qtime = elapsed / (MAX_ROUND * NUM_NODE)
+        total += qtime
+        log.info('Q%d[%s]: %f' % (i+1, ATTRIBUTE_NAME[i], qtime))
+        output_json['point_query'][ATTRIBUTE_NAME[i]] = qtime
+    # additional test is for querying nonexistent record
+    elapsed = 0
+    for j in range(MAX_ROUND):
+        for k in range(NUM_NODE):
+            elapsed += measure(baseline.pointQuery, nodes[k], " ")
+    qtime = elapsed / (MAX_ROUND * NUM_NODE)
+    total += qtime
+    log.info('Q%d[Empty]: %f' % (i+2, qtime))
+    log.info('Average Query Time: %f' %
+             (total / TESTCASE_CONFIG['pointQuery']))
+    # output_json['point_query'] = total / (sampleNum * NUM_NODE)
 
 
 def rangeQueryTest():
-    print("Range Query Test:")
-    EPOCH_BEGIN = 1522000000000
-    EPOCH_END = 1523000000000
-    RANGE = (EPOCH_END - EPOCH_BEGIN) / 1000000  # e8
-    NUM_TEST = 1
-
+    log.info("Range Query Test:")
+    # get timestamp
+    start = testcases['rangeQuery'][0].split(" ")[0]
+    log.debug(testcases['rangeQuery'])
+    log.debug(start)
     total = 0
-    for i in range(NUM_NODE):
-        start = randint(EPOCH_BEGIN, EPOCH_END)
-        timeRange = int(gauss(0, 0.1) * RANGE / 2 + RANGE / 2)
-        print("timeRange: %ds(min: %.2f)" % (timeRange, timeRange/60))
-        elapsed = 0
-        for j in range(NUM_TEST):
-            elapsed += measure(baseline.rangeQuery,
-                               (nodes[i], start, start+timeRange))
-        print("node %d range query time: %f" % (i, elapsed/NUM_TEST))
-        total += elapsed/NUM_TEST
-    print("average range query time: %f" % (total / NUM_NODE))
+    for scale in RANGE_SCALE:
+        qtime = getAverageNodeRound(
+            baseline.rangeQuery, int(start), int(start) + scale)
+        total += qtime
+        log.info('Range %d: %f' % (scale, qtime))
+        output_json['range_query'][scale] = qtime
+    # output_json['rangeQuery'] = total/NUM_NODE
 
 
 def andQueryTest():
-    print("And Query Test:")
-    NUM_TEST = 1
-    for i in range(NUM_NODE):
-        index = randint(0, len(database)-1)
-        line = database[index]
-        elapsed = 0
-        for k in range(NUM_TEST):
+    log.info("And Query Test:")
+    fields = testcases['andQuery'][0].split(" ")
+    for r in range(2, len(AND_FIELDS)+1):
+        total_qtime = 0
+        count = 0
+        for attr_index_list in combinations(range(len(AND_FIELDS)), r):
             attributes = []
-            for j in range(2, len(ATTRIBUTE)):
-                fields = sample(range(len(ATTRIBUTE)), j)
-                for q in range(len(fields)):
-                    attributes.append(
-                        ATTRIBUTE[fields[q]] + line.split(" ")[fields[q]])
-                andQueryTime = measure(
-                    baseline.andQuery, (nodes[i], attributes))
-                elapsed += andQueryTime
-                print("%d and query: %f" % (j, andQueryTime))
-        print("node %d and query time: %f" % (i, elapsed/NUM_TEST))
+            for attr in attr_index_list:
+                attributes.append(ATTRIBUTE[attr] + fields[attr])
+            qtime = getAverageNodeRound(baseline.andQuery, attributes)
+            log.debug("%s(%d): %f" % ([AND_FIELDS[i]
+                                       for i in attr_index_list], r, qtime))
+            total_qtime += qtime
+            count += 1
+        log.info("%d And Query: %f" % (r, total_qtime/count))
+        output_json['and_query'][r] = total_qtime/count
 
 
 def storageTest():
-    print("Storage Usage:")
-    print(subprocess.call(['sudo', 'du', '-sh', '-k',
-                           'node0', 'node1', 'node2', 'node3']))
+    log.info("Storage Usage:")
+    api = nodes[0]
+    num_blocks = api.getinfo()["result"]["blocks"]
+    size = 0
+    for block in api.listblocks(str(-num_blocks), True)["result"]:
+        if block["txcount"] > 1:
+            size += block["size"]
+    log.info(size)
+    output_json['storage'] = size
 
 
-##########################################################################
-########################         MAIN       ##############################
-##########################################################################
-
-
-# insertionTest()
-# print("\n")
-# singleQueryTest()
-# print("\n")
-# rangeQueryTest()
-# print("\n")
-# andQueryTest()
-# print("\n")
-# storageTest()
+def save2Json(file='benchmark.json'):
+    with open(file, 'w') as f:
+        json.dump(output_json, f)

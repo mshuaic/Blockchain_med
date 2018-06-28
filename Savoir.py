@@ -7,6 +7,7 @@ from base64 import b64encode
 import logging
 
 log = logging.getLogger('Savoir')
+log.setLevel('WARNING')
 
 
 class Savoir():
