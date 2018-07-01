@@ -13,7 +13,7 @@
   - [ ] Cutting tree
 4. (TO-DO) Build a solution using modern indexing techniques
 
-![benchmark_img](benchmark_img\benchmark2.png)
+![benchmark_img](benchmark_img/benchmark2.png)
 
 Chart interpretation:  
 1. Point Query: (using Node attribute as an example)
