@@ -1,7 +1,7 @@
 from Savoir import Savoir
 from timeit import default_timer as timer
 from config import NUM_NODE
-import matplotlib.pyplot as plt
+from sortedcontainers import SortedList
 
 ENCODE_FORMAT = 'utf-8'
 
@@ -42,8 +42,6 @@ def getData(result, isHex=False):
     if result is None:
         return []
     for item in result:
-        # print("AAAAA", item)
-        # if item is not None:
         if isHex:
             data.append(item['data'])
         else:
@@ -65,7 +63,3 @@ def validate(lines: str, *attributes, verbose=False):
         if flag:
             result += line
     return result
-
-
-def draw(files=None):
-    pass

@@ -12,6 +12,8 @@ config = {
 ATTRIBUTE = ['T', 'N', 'I', 'r', 'U', 'A', 'R']
 ATTRIBUTE_NAME = ['Timestamp', 'Node', 'ID',
                   'Ref-ID', 'User', 'Activity', 'Resource']
+ATTRIBUTE_TYPE = {'Timestamp': int, 'Node': int, 'ID': int,
+                  'Ref-ID': int, 'User': int, 'Activity': str, 'Resource': str}
 
 datadir = './testData/'
 

@@ -132,13 +132,13 @@ def insertionTest():
     output_json['insertion'] = total/NUM_NODE
 
 
-def getAverageNodeRound(func, *args):
+def getAverageNodeRound(func, *args, rounds=MAX_ROUND):
     elapsed = 0
     # log.debug(args)
-    for i in range(MAX_ROUND):
+    for i in range(rounds):
         for j in range(NUM_NODE):
             elapsed += measure(func, nodes[j], *args)
-    return elapsed / (MAX_ROUND * NUM_NODE)
+    return elapsed / (rounds * NUM_NODE)
 
 
 def pointQueryTest():
@@ -149,26 +149,15 @@ def pointQueryTest():
         elapsed = 0
         fields = testcases['pointQuery'][i].split(" ")
         qtime = getAverageNodeRound(baseline.pointQuery,
-                                    ATTRIBUTE[i] + fields[i])
-        # for j in range(MAX_ROUND):
-        #     for k in range(NUM_NODE):
-        #         elapsed += measure(baseline.pointQuery,
-        #                            (nodes[k], ATTRIBUTE[i] + fields[i]))
-        # qtime = elapsed / (MAX_ROUND * NUM_NODE)
+                                    ATTRIBUTE[i] + fields[i], rounds=50)
         total += qtime
         log.info('Q%d[%s]: %f' % (i+1, ATTRIBUTE_NAME[i], qtime))
         output_json['point_query'][ATTRIBUTE_NAME[i]] = qtime
-    # additional test is for querying nonexistent record
-    elapsed = 0
-    for j in range(MAX_ROUND):
-        for k in range(NUM_NODE):
-            elapsed += measure(baseline.pointQuery, nodes[k], " ")
+
     qtime = elapsed / (MAX_ROUND * NUM_NODE)
     total += qtime
-    log.info('Q%d[Empty]: %f' % (i+2, qtime))
     log.info('Average Query Time: %f' %
              (total / TESTCASE_CONFIG['pointQuery']))
-    # output_json['point_query'] = total / (sampleNum * NUM_NODE)
 
 
 def rangeQueryTest():
@@ -180,11 +169,10 @@ def rangeQueryTest():
     total = 0
     for scale in RANGE_SCALE:
         qtime = getAverageNodeRound(
-            baseline.rangeQuery, int(start), int(start) + scale)
+            baseline.rangeQuery, int(start), int(start) + scale, rounds=1)
         total += qtime
         log.info('Range %d: %f' % (scale, qtime))
         output_json['range_query'][scale] = qtime
-    # output_json['rangeQuery'] = total/NUM_NODE
 
 
 def andQueryTest():

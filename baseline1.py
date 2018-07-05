@@ -1,5 +1,5 @@
 from config import ATTRIBUTE, FILE_SIZE
-from util import getData, createStream, validate
+from util import getData, createStream, validate, ENCODE_FORMAT
 
 STREAM = 'data'
 DO_VALIDATION = False
@@ -11,7 +11,7 @@ def createStreams(api):
 
 def insert(api, data):
     for line in data:
-        hexstr = line.encode('utf-8').hex()
+        hexstr = line.encode(ENCODE_FORMAT).hex()
         attributes = line.split(" ")
         for i in range(len(ATTRIBUTE)):
             api.publish(STREAM, ATTRIBUTE[i] + attributes[i], hexstr)
