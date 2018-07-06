@@ -1,3 +1,30 @@
+#### 07/05/2018
+- (Done) Baseline3  
+  - Using multiple streams to insert data to Blockchain:  
+one line in log data -> one transaction, and the transaction will add data to
+multiple streams(tables) atomically. It reduces the number of transactions to 1/7
+(7 is the number of attributes). As a result, the insertion time and storage are
+both decreased dramatically. See figure blow.
+  - Build an indexing solution for timestamp:  
+    - Retrieve all timestamps from Blockchain
+    - Build a sorted list for the timestamps  
+
+    Now, we are able to do fast range query, however, **this solution builds an index
+  table in memory which is prohibited by the competition**. We just use it as
+  an experiment for now.
+- (Done) Sorting function  
+We are able to sort the result of querying. The test only use **400** records, so
+it does not show any significant difference in time. We will increase the number
+of records later.
+
+- (Doing) Learning indexing techniques
+  - [x] B tree
+  - [x] K-d tree
+  - [ ] R tree
+  - [ ] Hierarchy indexing
+- (To-do) Build a solution using modern indexing techniques
+![benchmark_img](benchmark_img/benchmark3.png)  
+
 #### 06/28/2018
 * (Done) Baseline2 and Baseline2.1
   * Baseline2:
@@ -10,7 +37,6 @@
   - [x] B tree
   - [ ] K-d tree
   - [ ] R tree
-  - [ ] Cutting tree
 * (TO-DO) Build a solution using modern indexing techniques
 
 ![benchmark_img](benchmark_img/benchmark2.png)
