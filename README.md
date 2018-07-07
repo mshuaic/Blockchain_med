@@ -6,7 +6,8 @@ Blockchain-based immutable logging and querying for cross-site genomic dataset a
 # Environment
 - tested in MacOS 10.13 and Ubuntu 16.0.4
 - Python 3
-- [install matplotlib](https://matplotlib.org/)
+- install python packages
+    `pip install -r requirements.txt`
 - [install fq](https://stedolan.github.io/jq/). 
 - [install docker](https://docs.docker.com/install/)
 
