@@ -59,9 +59,11 @@ The name of blockchain is _chain1_.
     bash clean.sh
 
 #### Step 3
-Run benchmark. You can specify which baseline program you want to test.
+Run benchmark. You can specify which baseline program you want to test.  
+To test different baselines, you need to do `bash clean.sh && bash create_node.sh` between two tests. 
 
     python main.py baseline1
+    bash clean.sh && bash create_node.sh
     python main.py baseline2
     
 #### Step 4
