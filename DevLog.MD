@@ -4,7 +4,7 @@ Use 100, 500, 2500 records to test the scalability. _Maybe should use equal scal
 instead??_
 ![scalability test](benchmark_img/scales.png)  
 
-- Reimplement baseline3 using Unique-ID approach. See [06/28/2018](#06/28/2018)
+- Reimplement baseline3 using Unique-ID approach. See [06/28/2018](#06-28-2018)
 development log (baseline2 chart interpretation).   
 When the querying result is large (number of record is large), the Unique-ID approach
 needs additional N times query (N = number of record). The Unique-ID saves about
