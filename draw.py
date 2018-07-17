@@ -5,6 +5,7 @@ import matplotlib.ticker as ticker
 import json
 import sys
 import os
+import numpy as np
 
 results = ['baseline1', 'baseline2']
 benchmark = []
@@ -14,9 +15,10 @@ xlabels = ['', 'range', 'number of and']
 xrotaions = [25, 0, 0]
 ROWs = 2
 COLs = 3
+SCALE = 0.01
 
 plt.rcParams["figure.figsize"] = [12, 7]
-plt.subplots_adjust(left=0.1, right=0.95, bottom=0.05,
+plt.subplots_adjust(left=0.1, right=0.95, bottom=0.1,
                     top=0.95, wspace=0.3, hspace=0.3)
 colors = []
 
@@ -25,7 +27,6 @@ def addBar(bar, pos, textFormat='%.2f', yFormat=None, yLabel=None):
     ax = plt.subplot(ROWs, COLs, pos)
     rects = ax.bar(results, height=[b[bar] for b in benchmark], color=colors)
     for rect in rects:
-        width = int(rect.get_width())
         xloc = rect.get_x() + rect.get_width()/2
         yloc = rect.get_y() + rect.get_height()
         ax.text(xloc, yloc*0.95, textFormat %
@@ -34,6 +35,8 @@ def addBar(bar, pos, textFormat='%.2f', yFormat=None, yLabel=None):
         ax.yaxis.set_major_formatter(ticker.FormatStrFormatter(yFormat))
     plt.ylabel(yLabel)
     plt.title(bar)
+    if len(results) >= 3:
+        plt.xticks(rotation=15)
 
 
 def main():
@@ -48,11 +51,14 @@ def main():
         with open(result+'.json', 'r') as f:
             benchmark.append(json.load(f))
     for i in range(len(titles)):
-        plt.subplot(ROWs, COLs, i+1)
+        ax = plt.subplot(ROWs, COLs, i+1)
         for j, b in enumerate(benchmark):
             p = plt.plot(b[titles[i]].keys(),
                          b[titles[i]].values(), marker=markers[j])
             colors.append(p[0].get_color())
+        # ax.yaxis.set_major_formatter(ticker.FormatStrFormatter('%.2f'))
+        plt.yticks(np.arange(min(b[titles[i]].values()),
+                             max(b[titles[i]].values())+SCALE, SCALE))
         plt.xticks(rotation=xrotaions[i])
         plt.title(titles[i])
         plt.ylabel('time(s)')

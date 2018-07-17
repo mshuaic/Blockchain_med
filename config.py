@@ -1,3 +1,5 @@
+from pathlib import Path
+
 NUM_NODE = 4
 
 config = {
@@ -15,7 +17,11 @@ ATTRIBUTE_NAME = ['Timestamp', 'Node', 'ID',
 ATTRIBUTE_TYPE = {'Timestamp': int, 'Node': int, 'ID': int,
                   'Ref-ID': int, 'User': int, 'Activity': str, 'Resource': str}
 
-datadir = './testData/'
-
+ATTRIBUTE_INDEX = {'Timestamp': 0, 'Node': 1, 'ID': 2,
+                   'Ref-ID': 3, 'User': 4, 'Activity': 5, 'Resource': 6}
 
 FILE_SIZE = 100
+
+datadir = Path('./testData').joinpath(str(FILE_SIZE))
+
+MAX_RESULT = NUM_NODE * FILE_SIZE

@@ -28,11 +28,9 @@
 import re
 import json
 # from time import sleep
-from random import randint
-from random import gauss
 from random import sample
-import subprocess
 from util import measure, getAPI
+import util
 from config import NUM_NODE, FILE_SIZE, datadir, config, ATTRIBUTE, ATTRIBUTE_NAME
 from pathlib import Path
 import logging
@@ -65,7 +63,7 @@ TESTCASE_CONFIG = {
 RANGE_SCALE = [100, 500, 1000]
 AND_FIELDS = ATTRIBUTE_NAME
 
-MAX_ROUND = 1
+MAX_ROUND = 50
 
 output_json = {'num_nodes': NUM_NODE, 'file_size': FILE_SIZE, 'insertion': 0,
                'point_query': {}, 'range_query': {}, 'and_query': {}, 'storage': 0}
@@ -76,7 +74,7 @@ log.setLevel('INFO')
 # log.setLevel('DEBUG')
 
 nodes = None
-database = []
+database = util.database
 testcases = {key: [] for key in TESTCASE_CONFIG}
 index = 0
 
@@ -87,11 +85,8 @@ def init():
         exit
 
     # size = sum(1 for line in open(datadir+'test0.txt'))
-    global database
-    database = []
-    for i in range(NUM_NODE):
-        database += [re.sub('\s+', ' ', line)
-                     for line in open(datadir+'test'+str(i)+'.txt')]
+    database.buildFromFiles([Path(datadir).joinpath(
+        'test'+str(i)+'.txt') for i in range(NUM_NODE)])
     log.info("database size: %d", len(database))
 
     global nodes
@@ -105,6 +100,7 @@ def loadTestCases(testfile='testcases.json'):
     global testcases
     temp = [database[i]
             for i in sample(range(len(database)), sum(TESTCASE_CONFIG.values()))]
+    # print(temp)
     count = 0
     if Path(Path(dir_path).joinpath(testfile)).is_file() is False:
         for key in TESTCASE_CONFIG.keys():
@@ -123,7 +119,7 @@ def insertionTest():
     total = 0
     for i in range(NUM_NODE):
         data = [re.sub('\s+', ' ', line)
-                for line in open(datadir+'test'+str(i)+'.txt')]
+                for line in open(Path(datadir).joinpath('test'+str(i)+'.txt'))]
         elapsed = measure(baseline.insert, nodes[i], data)
         total += elapsed
         log.info('Node %d Insertion time: %f' % (i, elapsed))
@@ -149,7 +145,7 @@ def pointQueryTest():
         elapsed = 0
         fields = testcases['pointQuery'][i].split(" ")
         qtime = getAverageNodeRound(baseline.pointQuery,
-                                    ATTRIBUTE[i] + fields[i], rounds=50)
+                                    ATTRIBUTE[i] + fields[i], rounds=MAX_ROUND)
         total += qtime
         log.info('Q%d[%s]: %f' % (i+1, ATTRIBUTE_NAME[i], qtime))
         output_json['point_query'][ATTRIBUTE_NAME[i]] = qtime
@@ -169,7 +165,7 @@ def rangeQueryTest():
     total = 0
     for scale in RANGE_SCALE:
         qtime = getAverageNodeRound(
-            baseline.rangeQuery, int(start), int(start) + scale, rounds=1)
+            baseline.rangeQuery, int(start), int(start) + scale, rounds=MAX_ROUND)
         total += qtime
         log.info('Range %d: %f' % (scale, qtime))
         output_json['range_query'][scale] = qtime
@@ -185,7 +181,8 @@ def andQueryTest():
             attributes = []
             for attr in attr_index_list:
                 attributes.append(ATTRIBUTE[attr] + fields[attr])
-            qtime = getAverageNodeRound(baseline.andQuery, attributes)
+            qtime = getAverageNodeRound(
+                baseline.andQuery, attributes, rounds=1)
             log.debug("%s(%d): %f" % ([AND_FIELDS[i]
                                        for i in attr_index_list], r, qtime))
             total_qtime += qtime
