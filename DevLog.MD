@@ -1,3 +1,18 @@
+#### 07/09/2018
+- Scalability test  
+Use 100, 500, 2500 records to test the scalability. _Maybe should use equal scale
+instead??_
+![scalability test](benchmark_img/scales.png)  
+
+- Reimplement baseline3 using Unique-ID approach. See [06/28/2018](#06282018)
+development log (baseline2 chart interpretation).   
+When the querying result is large (number of record is large), the Unique-ID approach
+needs additional N times query (N = number of record). The Unique-ID saves about
+20% space, but the average querying time increases 10 times.
+![baseline3uid](benchmark_img/benchmark3UID.png)
+
+- (Doing) Use database normalization techniques to reduce blockchain size
+
 #### 07/05/2018
 - (Done) Baseline3  
   - Using multiple streams to insert data to Blockchain:  
@@ -44,7 +59,7 @@ of records later.
 Chart interpretation:  
 * Point Query: (using Node attribute as an example)
   * Baseline1: query once, and returns all record
-  * Baseline2: the first query gets all pointers, and the second N times query( N =  number of pointers from the first query) get the actual record.  
+  * Baseline2: the first query gets all pointers, and the second N times query( N =  number of pointers from the first query) get the actual record.    
   Since Node attribute returns the largest number of record, it takes the longest time.
 * Range Query: The most query results are _None_, so two baselines have approximately same Performance  
 * And Query: Baseline2: The intersection of **2** _And_ is large(number of query is large), so
