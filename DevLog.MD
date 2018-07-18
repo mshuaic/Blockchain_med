@@ -1,3 +1,39 @@
+#### 07/17/2018
+- Baseline4 (database normalization)  
+    Most lines' ref-ID are refer back to the same original ID which means those
+    lines' User and Resource are the same. For this reason, we can exclude User
+    and Resource in transaction. When querying User and Resource, the baseline4
+    first get its original *Node*+*ID*, and then using *Node*+*ID* to query additional
+    result and union them.  
+    - In memory solution: First query *Node*, then extracting the lines that
+    has matching *ID*.  
+    - On Blockchain solution: Create an additional *Node*+*Ref-ID* stream whose
+    key is *Node*+*Ref-ID* and value is log record. We can query *Node*+*ID* =
+    *Node*+*Ref-ID* to get the additional result.  
+
+ Obviously, the former solution use more memory (we don't have the ability to benchmark the memory yet), and latter solution requires more space.   
+
+ ![baseline4](benchmark_img/benchmark4.png)
+
+- Multithreading  
+Idea: Sending multiple queries at the same time to reduce the effect of network latency.  
+Result: It seems that it has very little improvement.  
+
+- Some assumptions and designing principles of log system
+  - We assume users keep logging all actives all the time, so the number of
+  insertion operation is large.
+  - We assume users only check log once in a while, so the number of
+  querying operation is small.  
+  - The storage should be as small as possible.
+  - If the second assumption is correct, when the user is doing the query, the
+  fair amount of memory usage should be allowed.
+  - The dominating fact of query performance is the network latency
+
+
+- (Doing) Build an indexing tree for timestamp on blockchain.
+
+
+
 #### 07/09/2018
 - Scalability test  
 Use 100, 500, 2500 records to test the scalability. _Maybe should use equal scale
