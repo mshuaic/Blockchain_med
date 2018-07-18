@@ -50,15 +50,18 @@ def main():
     for result in results:
         with open(result+'.json', 'r') as f:
             benchmark.append(json.load(f))
+    ymin = sys.maxsize
+    ymax = 0
     for i in range(len(titles)):
         ax = plt.subplot(ROWs, COLs, i+1)
         for j, b in enumerate(benchmark):
             p = plt.plot(b[titles[i]].keys(),
                          b[titles[i]].values(), marker=markers[j])
             colors.append(p[0].get_color())
-        # ax.yaxis.set_major_formatter(ticker.FormatStrFormatter('%.2f'))
-        plt.yticks(np.arange(min(b[titles[i]].values()),
-                             max(b[titles[i]].values())+SCALE, SCALE))
+            ymin = min(ymin, min(b[titles[i]].values()))
+            ymax = max(ymax, max(b[titles[i]].values()))
+        ax.yaxis.set_major_formatter(ticker.FormatStrFormatter('%.2f'))
+        plt.yticks(np.arange(ymin, ymax+SCALE, SCALE))
         plt.xticks(rotation=xrotaions[i])
         plt.title(titles[i])
         plt.ylabel('time(s)')
