@@ -1,4 +1,7 @@
-import benchmark
+# 07/21/2018
+# swtich to new benchmark suite
+
+import benchmark2 as benchmark
 import sys
 import logging
 # from memory_profiler import profile
@@ -27,8 +30,8 @@ def main():
     benchmark.andQueryTest()
     print("\n")
     benchmark.storageTest()
-    # benchmark.save2Json(str(FILE_SIZE)+'.json')
     benchmark.save2Json(baseline + '.json')
+    # benchmark.save2Json(str(FILE_SIZE)+'.json')
 
 
 if __name__ == "__main__":

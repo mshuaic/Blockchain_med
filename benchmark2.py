@@ -1,3 +1,10 @@
+# version 1.0
+# 07/21/2018
+# swtich to new database structure
+# stream name: attribute name
+# key: attribute value
+# value: enitre record
+
 # version 0.3
 # 06/26/2018
 # use fixed query to benchmark
@@ -135,6 +142,7 @@ def getAverageNodeRound(func, *args, rounds=MAX_ROUND):
     # log.debug(args)
     for i in range(rounds):
         for j in range(NUM_NODE):
+            # print(*args)
             elapsed += measure(func, nodes[j], *args)
     return elapsed / (rounds * NUM_NODE)
 
@@ -147,7 +155,7 @@ def pointQueryTest():
         elapsed = 0
         fields = testcases['pointQuery'][i].split(" ")
         qtime = getAverageNodeRound(baseline.pointQuery,
-                                    ATTRIBUTE[i] + fields[i], rounds=MAX_ROUND)
+                                    ATTRIBUTE_NAME[i], fields[i], rounds=MAX_ROUND)
         total += qtime
         log.info('Q%d[%s]: %f' % (i+1, ATTRIBUTE_NAME[i], qtime))
         output_json['point_query'][ATTRIBUTE_NAME[i]] = qtime
@@ -181,10 +189,12 @@ def andQueryTest():
         count = 0
         for attr_index_list in combinations(range(len(AND_FIELDS)), r):
             attributes = []
+            values = []
             for attr in attr_index_list:
-                attributes.append(ATTRIBUTE[attr] + fields[attr])
+                attributes.append(ATTRIBUTE_NAME[attr])
+                values.append(fields[attr])
             qtime = getAverageNodeRound(
-                baseline.andQuery, attributes, rounds=1)
+                baseline.andQuery, list(zip(attributes, values)), rounds=1)
             log.debug("%s(%d): %f" % ([AND_FIELDS[i]
                                        for i in attr_index_list], r, qtime))
             total_qtime += qtime

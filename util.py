@@ -16,9 +16,9 @@ def getAPI(config, num_node):
 
 
 def createStream(masternode, streamPrefix):
-    # streams = masternode.liststreams()['result']
-    # if streamPrefix not in [item["name"] for item in streams]:
-    masternode.create('stream', streamPrefix, True)
+    streams = masternode.liststreams()['result']
+    if streamPrefix not in [item["name"] for item in streams]:
+        masternode.create('stream', streamPrefix, True)
 
 
 def measure(func, *args, time=1):
@@ -47,17 +47,6 @@ def getData(result, isHex=False):
     return data
 
 
-# def validate(lines, attributes, verbose=False):
-#     for line in lines:
-#         for att in attributes:
-#             if att not in line.split(" "):
-#                 if verbose:
-#                     print("attribute: %s, %s" % (att, line))
-#                     input()
-#                 return False
-#     return True
-
-
 class Database:
     __DB = []
     __table = {}
@@ -72,7 +61,10 @@ class Database:
         return len(self.__DB)
 
     def __getitem__(self, index):
-        return self.__DB[index]
+        if type(index) is int:
+            return self.__DB[index]
+        else:
+            return self.__table[index]
 
     def isExist(self, values):
         if isinstance(values, list):
@@ -83,15 +75,15 @@ class Database:
             return values in self.__DB
         return True
 
-    def validate(self, lines, attribute, verbose=False):
+    def validate(self, lines, stream, key, verbose=False):
         att_dict = {short: full for short,
                     full in zip(ATTRIBUTE, ATTRIBUTE_NAME)}
-        if set(self.__table[att_dict[attribute[0]]][attribute[1:]]) != set(lines):
+        if set(self.__table[stream][key]) != set(lines):
             if verbose:
-                print("attribute: %s" % attribute)
+                print("attribute: %s %s" % (stream, key) )
                 print("lines: \n", *lines, sep='\n')
                 print(
-                    "truth: \n", *self.__table[att_dict[attribute[0]]][attribute[1:]], sep='\n')
+                    "truth: \n", *self.__table[stream][key], sep='\n')
                 input()
             return False
         return True

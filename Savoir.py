@@ -54,6 +54,7 @@ class Savoir():
         Savoir.__id_count += 1
         postdata = {'chain_name': self.__chainname,
                     'version': '1.1',
+                    'jsonrpc': '2.0',
                     'params': args,
                     'method': self.__rpc_call,
                     'id': Savoir.__id_count}
@@ -69,3 +70,22 @@ class Savoir():
             log.error("Text: %s" % r.text)
             log.error("Json: %s" % r.json())
             return r.json()
+
+    def batch(self, rpc_call, largs):
+        encoded = []
+        for args in largs:
+            # print(args)
+            # input()
+            Savoir.__id_count += 1
+            postdata = {'chain_name': self.__chainname,
+                        'version': '1.1',
+                        'jsonrpc': '2.0',
+                        'params': args,
+                        'method': rpc_call,
+                        'id': Savoir.__id_count}
+            encoded.append(postdata)
+        url = ''.join(['http://', self.__rpchost, ':', self.__rpcport])
+        r = requests.post(url, data=json.dumps(
+            encoded), headers=self.__headers)
+        # print(r.json())
+        return r.json()

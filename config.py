@@ -20,6 +20,8 @@ ATTRIBUTE_TYPE = {'Timestamp': int, 'Node': int, 'ID': int,
 ATTRIBUTE_INDEX = {'Timestamp': 0, 'Node': 1, 'ID': 2,
                    'Ref-ID': 3, 'User': 4, 'Activity': 5, 'Resource': 6}
 
+ATT_S2F = {short: full for short, full in zip(ATTRIBUTE, ATTRIBUTE_NAME)}
+
 FILE_SIZE = 100
 
 datadir = Path('./testData').joinpath(str(FILE_SIZE))
