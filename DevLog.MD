@@ -1,3 +1,40 @@
+#### 08/01/2018
+- Baseline6  
+  **New feature found**  
+  In json-rpc call, we can batch multiple calls into an array and send it to server once.
+  Now instead of sending multiple calls which bottleneck the performance (latency
+  = # of calls * network latency), we batch multiple calls and sent it only
+  once. The server will desterilize calls locally, hence the former bottleneck
+  is not a problem anymore.  
+
+  Based on this idea, we reconstruct transaction structure  
+  - Before: We write the same data into multiple streams in one transaction.
+  Every vout of the transaction contains the same data. The data is duplicated
+  many times in that transaction.
+  - After: Write the actual date into one stream, and write empty data to the
+  other streams in the same transaction. All those stream items will share the
+  same _txid_ so we can use _getstreamitem_ to retrieve the item from the first
+  stream after finding that _txid_ from listing the other stream items. The result
+  often contains multiple _txid_, and we use batch call to query the actual data.
+  Note: this approach is similar to unique ID approach. See [06/28/2018](#06282018)  
+
+  Now the usage of storage has improved.  
+  ![baseline6](benchmark_img/baseline6.png)
+
+- Baseline5  
+  Build multi-level indexing structure for timestamp on blockchain
+    - 1-level: timestamp gap = 10000. In this level, one key stores about ten
+    values.
+    - 2-level: timestamp gap = 1-level gap * 100. In this level, one key stores
+    100 1-level key-values records.
+    - n-level: timestamp gap = (n-1) level gap * 100. One key stores 100 (n-1)-
+    level key-values records.    
+
+  The number of level is determined by the range of timestamp.(NEED TO DO MORE
+    TESTES LATER)  
+  Now, the range query gets a batch of records at once.  
+  ![4v5](benchmark_img/4v5.png)   
+
 #### 07/17/2018
 - Baseline4 (database normalization)  
     Most lines' ref-ID are refer back to the same original ID which means those
@@ -5,9 +42,9 @@
     and Resource in transaction. When querying User and Resource, the baseline4
     first get its original *Node*+*ID*, and then using *Node*+*ID* to query additional
     result and union them.  
-    - In memory solution: First query *Node*, then extracting the lines that
+    - In memory solution(baseline4): First query *Node*, then extracting the lines that
     has matching *ID*.  
-    - On Blockchain solution: Create an additional *Node*+*Ref-ID* stream whose
+    - On Blockchain solution(baseline4_1): Create an additional *Node*+*Ref-ID* stream whose
     key is *Node*+*Ref-ID* and value is log record. We can query *Node*+*ID* =
     *Node*+*Ref-ID* to get the additional result.  
 
