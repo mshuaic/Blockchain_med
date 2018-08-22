@@ -1,3 +1,7 @@
+#### 08/21/2018
+- Baseline7  
+  Baseline6 + [database normalization](#07172018)  
+  ![baseline7](benchmark_img/baseline7.png)
 #### 08/01/2018
 - Baseline6  
   **New feature found**  
