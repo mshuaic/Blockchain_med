@@ -1,7 +1,22 @@
+#### 08/23/2018
+- Baseline8  
+  Modifies _and query_ algorithms  
+  Now _and query_ queries one stream, then it sorts the result in memory.  
+  How to pick the stream?   
+  Priority: the smaller result set has higher priority  
+  For example: User queries (_timestamp_ _AND_ _id_). _Timestamp_ stream
+  normally returns only one result and _ID_ stream returns four results,
+  so _Timestamp_ stream has higher priority than _ID_ stream. We should query
+  _Timestamp_ stream, get the result and sort it in memory.
+
+  ![baseline8](benchmark_img/baseline8.png)
+
+
+
 #### 08/21/2018
 - Baseline7  
   Baseline6 + [database normalization](#07172018)  
-  
+
   ![baseline7](benchmark_img/baseline7.png)
 
 #### 08/01/2018
