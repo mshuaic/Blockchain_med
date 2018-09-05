@@ -1,16 +1,41 @@
 from Savoir import Savoir
+from config import DELIMITER
+
+
+def getAPI(auth):
+    api = Savoir(auth["rpcuser"], auth["rpcpasswd"],
+                 auth["rpchost"], auth["rpcport"], auth["chainname"])
+    return api
+
+
+def encoder(line):
+    fields = line.split(DELIMITER)
+    activity = fields[ATTRIBUTE_INDEX["Activity"]]
+    resource = fields[ATTRIBUTE_INDEX["Resource"]]
+    fields[ATTRIBUTE_INDEX["Activity"]] = activities.setdefault(
+        activity, str(len(activities)))
+    fields[ATTRIBUTE_INDEX["Resource"]] = resources.setdefault(
+        resource, str(len(resources)))
+    temp = 'f'.join(fields)
+    # padding to hex string format
+    if len(temp) % 2 != 0:
+        temp += 'f'
+
+        data.append(temp)
+
+
 from timeit import default_timer as timer
 from config import NUM_NODE, ATTRIBUTE_INDEX, ATTRIBUTE_NAME, ATTRIBUTE
 import re
 
-ENCODE_FORMAT = 'utf-8'
+ENCODE_FORMAT = 'ascii'
 
 
 def getAPI(config, num_node):
     api = [None] * num_node
     for i in range(NUM_NODE):
         api[i] = Savoir(config["rpcuser"], config["rpcpasswd"],
-                        config["rpchost"], str(config["rpcport"]+i), config["chainname"])
+                        config["rpchost"], str(int(config["rpcport"])+i), config["chainname"])
     # print(api[i].getinfo())
     return api
 
@@ -53,8 +78,7 @@ class Database:
 
     def buildFromFiles(self, files):
         for f in files:
-            self.__DB += [re.sub('\s+', ' ', line)
-                          for line in open(f)]
+            self.__DB += [line.rstrip() for line in open(f)]
         self.__db2Table(ATTRIBUTE_NAME)
 
     def __len__(self):
@@ -80,10 +104,10 @@ class Database:
                     full in zip(ATTRIBUTE, ATTRIBUTE_NAME)}
         if set(self.__table[stream][key]) != set(lines):
             if verbose:
-                print("attribute: %s %s" % (stream, key) )
-                print("lines: \n", *lines, sep='\n')
+                print("attribute: %s %s" % (stream, key))
+                print("lines: \n", *map(repr, lines), sep='\n')
                 print(
-                    "truth: \n", *self.__table[stream][key], sep='\n')
+                    "truth: \n", *map(repr, self.__table[stream][key]), sep='\n')
                 input()
             return False
         return True
@@ -92,7 +116,7 @@ class Database:
         for att in attributes:
             self.__table[att] = {}
             for data in self.__DB:
-                values = data.split(" ")
+                values = data.split(DELIMITER)
                 self.__table[att].setdefault(
                     values[ATTRIBUTE_INDEX[att]], []).append(data)
 

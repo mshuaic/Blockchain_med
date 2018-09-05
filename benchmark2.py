@@ -38,7 +38,7 @@ import json
 from random import sample
 from util import measure, getAPI
 import util
-from config import NUM_NODE, FILE_SIZE, datadir, config, ATTRIBUTE, ATTRIBUTE_NAME
+from config import *
 from pathlib import Path
 import logging
 from itertools import combinations
@@ -68,7 +68,8 @@ TESTCASE_CONFIG = {
     "andQuery": 1
 }
 # 483730
-RANGE_SCALE = [1000, 10000, 100000]
+MAX_HEIGHT = 8
+RANGE_SCALE = [10**i for i in range(4, MAX_HEIGHT)]
 # RANGE_SCALE = [100000]
 AND_FIELDS = ATTRIBUTE_NAME
 
@@ -99,7 +100,7 @@ def init():
     log.info("database size: %d", len(database))
 
     global nodes
-    nodes = getAPI(config, NUM_NODE)
+    nodes = getAPI(auth, NUM_NODE)
     baseline.createStreams(nodes[0])
 
     log.info("File Size: %d" % FILE_SIZE)
@@ -123,12 +124,31 @@ def loadTestCases(testfile='testcases.json'):
             testcases = json.load(read_file)
 
 
+activities = {}
+resources = {}
+
+
 def insertionTest():
     log.info("Insertion Test:")
     total = 0
     for i in range(NUM_NODE):
-        data = [re.sub('\s+', ' ', line)
+        data = [line.rstrip()
                 for line in open(Path(datadir).joinpath('test'+str(i)+'.txt'))]
+        # with open(Path.joinpath(datadir, 'test'+str(i)+'.txt')) as f:
+        #     data = []
+        #     for line in f:
+        #         fields = line.split(DELIMITER)
+        #         activity = fields[ATTRIBUTE_INDEX["Activity"]]
+        #         resource = fields[ATTRIBUTE_INDEX["Resource"]]
+        #         fields[ATTRIBUTE_INDEX["Activity"]] = activities.setdefault(
+        #             activity, str(len(activities)))
+        #         fields[ATTRIBUTE_INDEX["Resource"]] = resources.setdefault(
+        #             resource, str(len(resources)))
+        #         temp = 'f'.join(fields)
+        #         # padding to hex string format
+        #         if len(temp) % 2 != 0:
+        #             temp += 'f'
+        #         data.append(temp)
         elapsed = measure(baseline.insert, nodes[i], data)
         total += elapsed
         log.info('Node %d Insertion time: %f' % (i, elapsed))
@@ -137,14 +157,14 @@ def insertionTest():
     output_json['insertion'] = total/NUM_NODE
 
 
-def getAverageNodeRound(func, *args, rounds=MAX_ROUND):
+def getAverageNodeRound(func, *args, rounds=MAX_ROUND, nnode=NUM_NODE):
     elapsed = 0
     # log.debug(args)
     for i in range(rounds):
-        for j in range(NUM_NODE):
+        for j in range(nnode):
             # print(*args)
             elapsed += measure(func, nodes[j], *args)
-    return elapsed / (rounds * NUM_NODE)
+    return elapsed / (rounds * nnode)
 
 
 def pointQueryTest():
@@ -155,7 +175,7 @@ def pointQueryTest():
         elapsed = 0
         fields = testcases['pointQuery'][i].split(" ")
         qtime = getAverageNodeRound(baseline.pointQuery,
-                                    ATTRIBUTE_NAME[i], fields[i], rounds=MAX_ROUND)
+                                    ATTRIBUTE_NAME[i], fields[i], rounds=10)
         total += qtime
         log.info('Q%d[%s]: %f' % (i+1, ATTRIBUTE_NAME[i], qtime))
         output_json['point_query'][ATTRIBUTE_NAME[i]] = qtime
@@ -175,9 +195,9 @@ def rangeQueryTest():
     total = 0
     for scale in RANGE_SCALE:
         qtime = getAverageNodeRound(
-            baseline.rangeQuery, int(start), int(start) + scale, rounds=MAX_ROUND)
+            baseline.rangeQuery, int(start), int(start) + scale, rounds=MAX_ROUND, nnode=1)
         total += qtime
-        log.info('Range %d: %f' % (scale, qtime))
+        log.info('Range %.0E: %f' % (scale, qtime))
         output_json['range_query'][scale] = qtime
 
 
@@ -201,6 +221,36 @@ def andQueryTest():
             count += 1
         log.info("%d And Query: %f" % (r, total_qtime/count))
         output_json['and_query'][r] = total_qtime/count
+
+
+def andRangeQueryTest():
+    log.info("And + Range Query Test:")
+    # print(AND_FIELDS)
+    # input()
+    start = testcases['rangeQuery'][0].split(" ")[0]
+    total = 0
+    fields = testcases['andQuery'][0].split(" ")
+    for scale in RANGE_SCALE:
+        for r in range(2, len(AND_FIELDS)+1):
+            total_qtime = 0
+            count = 0
+            for attr_index_list in combinations(range(len(AND_FIELDS)), r):
+                attributes = []
+                values = []
+                for attr in attr_index_list:
+                    if attr == 0:
+                        continue
+                    attributes.append(ATTRIBUTE_NAME[attr])
+                    values.append(fields[attr])
+                    # print(attr_index_list)
+                    qtime = getAverageNodeRound(
+                        baseline.andRangeQuery, int(start), int(start) + scale, list(zip(attributes, values)), rounds=1, nnode=1)
+                    log.info("Range %.0E, %s(%d): %f" % (scale, [AND_FIELDS[i]
+                                                                 for i in attr_index_list], r, qtime))
+                    total_qtime += qtime
+                    count += 1
+        # qtime = getAverageNodeRound(
+        #     baseline.rangeQuery, int(start), int(start) + scale, rounds=MAX_ROUND, nnode=1)
 
 
 def storageTest():
